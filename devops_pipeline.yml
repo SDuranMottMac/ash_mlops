@@ -1,0 +1,115 @@
+# should-change the variables below to the ones you need
+variables:
+  ml-ws-connection: "" # Workspace Service Connection name
+  # AML Subscription ID set as secret as ml-sb
+  ml-ws: "" # AML Workspace name
+  ml-rg: "" # AML resource Group name
+  ml-path: "model" # Model directory path in repo
+  environment_name: "model-environment" # name of your model environment
+  deployed-endpoint: "n/a" # endpoint of your deployed model, if not deployed yet keep it as 'n/a'
+  test-path: "testing" # path to your testing folder
+  test-data-path: "" # path to your testing dataset in your AML dataset storage
+  train-data-path: "" # path to your training dataset in your AML dataset storage
+  ml-compute-train: "cpu-cluster-01" # name of your training compute
+
+# could-change based on when you want this pipeline to be triggered
+trigger:
+  branches:
+    include:
+      - master
+      - dev
+
+pr: none
+
+pool:
+  vmImage: "ubuntu-latest"
+
+steps:
+  - task: UsePythonVersion@0
+    displayName: "Setting python version to 3.8"
+    inputs:
+      versionSpec: "3.8"
+      architecture: "x64"
+
+  # Installing Dependencies
+  # for private packages: (token being a secret Github PAT in the pipeline)
+  # for more information, refer to: https://docs.github.com/en/enterprise-cloud@latest/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token
+  # pip install git+https://x-access-token:$(token)@github.com/H2knOw-how/moataapi-toolbox
+  # should-change test-requirements to the ones of your project
+  - bash: |
+      pip install --upgrade pip
+      pip install -r $(test-path)/test-requirements.txt
+    displayName: "Installing Required Python Packages"
+
+  - bash: |
+      pip install azure-cli==2.24.2
+      pip install azureml-core
+      pip install azureml-pipeline-core
+      pip install azureml-pipeline-steps
+    condition: succeeded()
+    displayName: "Installing Pipeline Dependencies"
+
+  - bash: |
+      pip install -r testing/test-requirements.txt
+    displayName: "Installing Required Python Testing Packages"
+
+  # Linting Scripts
+  - script: |
+      pylint --fail-under=9.5 $(ml-path)/aml_pipeline.py
+      pylint --fail-under=9.5 $(ml-path)/script_steps
+    displayName: "Run lint tests on Pipelines code"
+
+  - script: |
+      pylint --fail-under=9.5 shared_code
+    displayName: "Run lint tests on Shared code"
+
+  # Unit Testing Scripts
+  - script: |
+      pytest $(test-path) --doctest-modules --junitxml=test_results.xml  --cov=. --cov-report=xml --cov-report=html
+    workingDirectory: "$(System.DefaultWorkingDirectory)"
+    displayName: "Run tests"
+
+  # Publishing Test Results
+  - task: PublishTestResults@2
+    displayName: "Publish test results /test_results.xml"
+    inputs:
+      testResultsFiles: "$(System.DefaultWorkingDirectory)/**/test_results.xml"
+      testRunTitle: "test_results"
+      failTaskOnFailedTests: true
+
+  - task: PublishCodeCoverageResults@1
+    displayName: "Publish Code Coverage Results"
+    inputs:
+      codeCoverageTool: Cobertura
+      summaryFileLocation: "$(System.DefaultWorkingDirectory)/**/coverage.xml"
+      failIfCoverageEmpty: true
+
+  # Publish Config Files as Build Artifact
+  - task: PublishBuildArtifacts@1
+    condition: succeeded()
+    inputs:
+      PathtoPublish: $(ml-path)/config/
+      ArtifactName: "model-config"
+      publishLocation: "Container"
+    displayName: Publish Config Files as Build Artifact
+
+  # Run AML Pipeline
+  - task: AzureCLI@2
+    displayName: "Trigger AML pipeline"
+    condition: succeeded()
+    inputs:
+      azureSubscription: $(ml-ws-connection)
+      workingDirectory: "$(System.DefaultWorkingDirectory)"
+      scriptLocation: inlineScript
+      scriptType: "bash"
+      inlineScript: "python ./$(ml-path)/aml_pipeline.py"
+    env:
+      ML_SUBSCRIPTION_ID: $(ml-sb)
+      ML_WORKSPACE_NAME: $(ml-ws)
+      ML_RESOURCE_GROUP: $(ml-rg)
+      ML_ENVIRONMENT_NAME: $(environment-name)
+      ML_DEPLOYED_ENDPOINT: $(deployed-endpoint)
+      ML_TRAINING_COMPUTE: $(ml-compute-train)
+      ML_PATH: $(ml-path)
+      ML_TRAIN_DATA_PATH: $(train-data-path)
+      ML_TEST_DATA_PATH: $(test-data-path)

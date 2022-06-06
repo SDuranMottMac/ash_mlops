@@ -1,0 +1,13 @@
+# Conda Environment
+# This file describes the conda environment required to run the model. It is used in the
+# inference_config when deploying the model, as well as in the aml_pipeline when training the model.
+#
+# See the docs here:
+# https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-file-manually
+# should-change
+name: model-environment
+dependencies:
+  - python=3.8
+  - pip:
+      - azureml-defaults==1.30.0
+      - numpy

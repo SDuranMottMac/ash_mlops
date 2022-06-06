@@ -1,0 +1,16 @@
+# Deployment Config (DEV) (ACI):
+# could-change
+
+containerResourceRequirements:
+  cpu: 1
+  memoryInGB: 2
+computeType: ACI
+# This file is used to configure the compute used to run the model after it has been deployed. There
+# is two copies of this, one for Development and one for Production. This is for Development. As
+# such it uses slower ACI compute.
+#
+# see the docs:
+# https://docs.microsoft.com/en-us/azure/machine-learning/reference-azure-machine-learning-cli#deployment-configuration-schema
+#   slightly bare-bones documentation of this file
+# https://docs.microsoft.com/en-us/python/api/azureml-core/azureml.core.webservice.aci.aciservicedeploymentconfiguration?view=azure-ml-py
+#   documentation of the python method that this file provides arguments to

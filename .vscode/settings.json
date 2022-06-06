@@ -1,0 +1,10 @@
+{
+    "python.linting.enabled": true,
+    "python.linting.pycodestyleEnabled": true,
+    "python.linting.flake8Enabled": true,
+    "python.linting.pycodestyleArgs": ["--max-line-length", "100", "--max-doc-length", "74"],
+    "python.linting.flake8Args": [
+        "--ignore=E24,W503,W504,E501",
+        "--verbose"
+    ]
+}

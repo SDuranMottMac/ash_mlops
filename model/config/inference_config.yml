@@ -1,0 +1,41 @@
+# Inference Config
+# could-change mainly if you rename the entry script/ conda environment
+
+entryScript: entry_script.py
+runtime: python
+condaFile: conda_environment.yml
+extraDockerfileSteps:
+sourceDirectory: .
+enableGpu: False
+baseImage:
+baseImageRegistry:
+# This file stores the information required to run the model using Python on the container:
+#
+#  - The `entryScript` is a wrapper that opens up the stored model (likely a .pkl) and defines data
+#    input and output. See the file `entry_script.py` for more details. Note that this file is also
+#    sometimes named `score.py` in other Microsoft Documentation.
+#
+#  - The `runtime` should probably be 'python' although 'spark-py' is also possible.
+#
+#  - The `condaFile` is stored in the same directory, and defines our environment for our container
+#    image. We shall also use this file to
+#
+#  - `extraDockerfileSteps` can be a local file that contains Docker steps that are run when setting
+#    up the container image, although we don't use that here.
+#
+#  - `sourceDirectory` is the relative path (when running on a DevOps CI agent) to `entry_script.py`
+#    and `inference_conda.yml`
+#
+#  - `enableGpu` determines if we enable GPU support in the Docker image, although note that this
+#    will only be used if the compute target used supports it too.
+#
+#  - `baseImage` can be specified to use a specific base image for the container, and
+#    `baseImageRegistry` is where this is stored. Left blank, this will default to a default image
+#    for the selected runtime
+#
+# see the docs:
+# https://docs.microsoft.com/en-us/azure/machine-learning/reference-azure-machine-learning-cli#inference-configuration-schema
+#   slightly bare-bones documentation of this file
+# https://docs.microsoft.com/en-us/python/api/azureml-core/azureml.core.model.inferenceconfig?view=azure-ml-py
+#   documentation of the python method that this file provides arguments to
+

@@ -1,0 +1,30 @@
+# Deployment Config (PRD) (AKS):
+# could-change
+
+computeType: AKS
+
+autoScaler:
+    autoscaleEnabled: True
+    minReplicas: 1
+    maxReplicas: 3
+    refreshPeriodInSeconds: 10
+    targetUtilization: 70
+
+containerResourceRequirements:
+    cpu: 1
+    memoryInGB: 0.5
+
+sslEnabled: False
+authEnabled: True
+appInsightsEnabled: True
+maxQueueWaitMs: 500
+scoringTimeoutMs: 5000
+# This file is used to configure the compute used to run the model after it has been deployed. There
+# is two copies of this, one for Development and one for Production. This is for Production. As such
+# it uses faster, more scalable AKS compute.
+#
+# see the docs:
+# https://docs.microsoft.com/en-us/azure/machine-learning/reference-azure-machine-learning-cli#deployment-configuration-schema
+#   slightly bare-bones documentation of this file
+# https://docs.microsoft.com/en-us/python/api/azureml-core/azureml.core.webservice.aci.aciservicedeploymentconfiguration?view=azure-ml-py
+#   documentation of the python method that this file provides arguments to
